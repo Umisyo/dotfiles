@@ -17,6 +17,10 @@ $AUTO_CD = True
 $XONSH_SHOW_TRACEBACK = True
 # ãã­ã³ããã®è¨­å®ã¿ã¤ã ã¢ã¦ãã®ã¡ãã»ã¼ã¸æå¶
 $SUPPRESS_BRANCH_TIMEOUT_MESSAGE = True
+$XONSH_COLOR_STYLE = 'native'
+$COLOR_INPUT = True
+$COLOR_RESULTS = True
+
 
 # è¦ãç®ã¦ã¶ãã£ããåãå¤æ´ãã
 # åè:http://xon.sh/tutorial.html#customizing-the-prompt
