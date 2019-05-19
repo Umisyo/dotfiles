@@ -1,0 +1,45 @@
+$VI_MODE = True
+# Ctrl + D ã§çµäºããªã
+$IGNOREEOF = True
+# tabã§ã¯ãªãç©ºç½4ã¤
+$INDENT = "    "
+# è£å®æã«å¤§å°åºå¥ããªã
+$CASE_SENSITIVE_COMPLETIONS = False
+# è£å®é¸æEnterã§å³å®è¡ããªã
+$COMPLETIONS_CONFIRM = True
+# é£ç¶éè¤ã³ãã³ããä¿å­ããªã
+$HISTCONTROL = (ignoredups)
+# æ¬å¼§ãè£å®
+$XONSH_AUTOPAIR = True
+# ãã£ã¬ã¯ããªåãå¥åããã°cdã§ãã
+$AUTO_CD = True
+# ã¨ã©ã¼å¨ã¦åãããã«
+$XONSH_SHOW_TRACEBACK = True
+# ãã­ã³ããã®è¨­å®ã¿ã¤ã ã¢ã¦ãã®ã¡ãã»ã¼ã¸æå¶
+$SUPPRESS_BRANCH_TIMEOUT_MESSAGE = True
+
+# è¦ãç®ã¦ã¶ãã£ããåãå¤æ´ãã
+# åè:http://xon.sh/tutorial.html#customizing-the-prompt
+# ãã­ã³ããä¸ã«ã¯å ´æã ãåºã
+$PROMPT = "{INTENSE_YELLOW}[ {cwd} ] {GREEN}$ "
+# ä¸é¨ã«user, hostæå ±ãè¿½å 
+$BOTTOM_TOOLBAR = "{BACKGROUND_WHITE}{BLACK}{user}@{hostname}"
+# å³ã«branchæå ±
+$RIGHT_PROMPT = "{curr_branch}"
+# lsã³ãã³ãã®çµæã®è¦ãç®
+$LS_COLORS="di=34:ln=35:so=32:pi=33:ex=31:bd=46;34:cd=43;34:su=41;30:sg=46;30:tw=42;30:ow=43;30"
+
+ï¼ããããã
+aliases["lt"] = "ls -ltr"
+aliases["l"] = "ls -ltr"
+aliases["la"] = "ls -la"
+aliases["ll"] = "ls -l"
+aliases["so"] = "source"
+aliases["v"] = "vim"
+aliases["vi"] = "vim"
+aliases["vx"] = "vim ~/.xonshrc"
+aliases["vv"] = "vim ~/.vimrc"
+aliases["vs"] = "vim /etx/ssh/ssh_config"
+aliases["cp"] = "cp -i"
+aliases["rm"] = "rm -i"
+aliases["ju"] = "jupyter notebook"
