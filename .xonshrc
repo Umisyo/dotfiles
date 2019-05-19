@@ -1,3 +1,4 @@
+# vié¢¨ã®æä½
 $VI_MODE = True
 # Ctrl + D ã§çµäºããªã
 $IGNOREEOF = True
@@ -17,10 +18,6 @@ $AUTO_CD = True
 $XONSH_SHOW_TRACEBACK = True
 # ãã­ã³ããã®è¨­å®ã¿ã¤ã ã¢ã¦ãã®ã¡ãã»ã¼ã¸æå¶
 $SUPPRESS_BRANCH_TIMEOUT_MESSAGE = True
-$XONSH_COLOR_STYLE = 'native'
-$COLOR_INPUT = True
-$COLOR_RESULTS = True
-
 
 # è¦ãç®ã¦ã¶ãã£ããåãå¤æ´ãã
 # åè:http://xon.sh/tutorial.html#customizing-the-prompt
@@ -28,9 +25,7 @@ $COLOR_RESULTS = True
 $PROMPT = "{INTENSE_YELLOW}[ {cwd} ] {GREEN}$ "
 # ä¸é¨ã«user, hostæå ±ãè¿½å 
 $BOTTOM_TOOLBAR = "{BACKGROUND_WHITE}{BLACK}{user}@{hostname}"
-# å³ã«branchæå ±
 $RIGHT_PROMPT = "{curr_branch}"
-# lsã³ãã³ãã®çµæã®è¦ãç®
 $LS_COLORS="di=34:ln=35:so=32:pi=33:ex=31:bd=46;34:cd=43;34:su=41;30:sg=46;30:tw=42;30:ow=43;30"
 
 ï¼ããããã

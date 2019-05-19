@@ -18,5 +18,12 @@ set incsearch " インクリメンタルサーチ. １文字入力毎に検索�
 set ignorecase " 検索パターンに大文字小文字を区別しない
 set smartcase " 検索パターンに大文字を含んでいたら大文字小文字を区別する
 set hlsearch " 検索結果をハイライト
+set ambiwidth=double
+set wildmenu
+set noerrorbells
+set shellslash
+set history=10000
+set noswapfile
+
 colorscheme molokai
 
