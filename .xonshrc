@@ -1,44 +1,185 @@
-# vié¢¨ã®æä½
-$VI_MODE = True
-# Ctrl + D ã§çµäºããªã
-$IGNOREEOF = True
-# tabã§ã¯ãªãç©ºç½4ã¤
-$INDENT = "    "
-# è£å®æã«å¤§å°åºå¥ããªã
-$CASE_SENSITIVE_COMPLETIONS = False
-# è£å®é¸æEnterã§å³å®è¡ããªã
+import os
+import json
+import importlib
+import builtins
+from xonsh.xontribs import xontrib_context, update_context
+import xonsh.xontribs
+from collections import OrderedDict
+from prompt_toolkit.keys import Keys
+from prompt_toolkit.filters import (Condition, IsMultiline, HasSelection, ViInsertMode)
+import matplotlib.pyplot as plt
+import xontrib.mplhooks
+import numpy as np
+import cv2
+import random
+from mimetypes import guess_extension
+
+def z():
+    lines = open($DIR_HIST_PATH[0]).read().rstrip("\n").split("\n")
+    return("\n".join([p for p, c in Counter(lines).most_common()]))
+
+def _import(name, module, ver=None):
+    try:
+        globals()[name] = importlib.import_module(module)
+    except ImportError:
+        try:
+            import subprocess
+            cmd = "sudo pip3 install -I {}".format(name)
+            subprocess.call(cmd, shell=True)
+            globals()[name] = importlib.import_module(module)
+        except:
+            print("can't import: {}".format(module))
+_import('pexpect','pexpect')
+
+def _update_context(name, ctx=None):
+    if ctx is None:
+        ctx = builtins.__xonsh__.ctx
+    if not hasattr(update_context, "bad_imports"):
+        _update_context.bad_imports = []
+    modctx = xontrib_context(name)
+    if modctx is None:
+        import subprocess
+        cmd = "sudo xonsh -c 'xpip3 install -I xontrib-{}'".format(name)
+        subprocess.call(cmd, shell=True)
+        remodctx = xontrib_context(name)
+        if remodctx is None:
+            _update_context.bad_imports.append(name)
+            return ctx
+        return ctx.update(remodctx)
+    return ctx.update(modctx)
+xonsh.xontribs.update_context = _update_context
+
+def _imgls(path):
+    fig, ax = plt.subplots(3, 3, sharex='col', sharey='row')
+    fig.set_size_inches(10, 10)
+    d=[]
+    for x in os.listdir(path):
+        if x.split('.')[-1] in ('jpe', 'jpeg', 'png'):
+            d.append(path+x)
+    if len(d)>9:
+        d = random.sample(d,9)
+    for i, imgid in enumerate(d):
+        col = i % 3
+        row = i // 3
+        img = cv2.imread(imgid)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        ax[row, col].imshow(img)
+    xontrib.mplhooks.display_figure_with_iterm2(fig)
+aliases['imgls'] = _imgls
+
+def get_history(session_history=None, return_list=False):
+    hist_dir = __xonsh__.env['XONSH_DATA_DIR']
+    files = [ os.path.join(hist_dir,f) for f in os.listdir(hist_dir)
+              if f.startswith('xonsh-') and f.endswith('.json') ]
+    file_hist = []
+    for f in files:
+        try:
+            file_hist.append(json.load(open(f))['data']['cmds'])
+        except:
+            pass
+    cmds = [ ( c['inp'].replace('\n', ''), c['ts'][0] )
+                 for cmds in file_hist for c in cmds if c]
+    cmds.sort(key=itemgetter(1))
+    cmds = [ c[0] for c in cmds[::-1] ]
+    if session_history:
+        cmds.extend(session_history)
+    # dedupe
+    zip_with_dummy = list(zip(cmds, [0] * len(cmds)))[::-1]
+    cmds = list(OrderedDict(zip_with_dummy).keys())[::-1]
+    cmds = reversed(cmds)
+    if return_list:
+        return cmds
+    else:
+        return '\n'.join(cmds)
+
+
+
+@events.on_ptk_create
+def custom_keybindings(bindings, **kw):
+
+    # ctrl+vで入力中の単一、複数行コマンドをvimで開く
+    @bindings.add('c-v')
+    def edit_in_editor(event):
+        event.current_buffer.tempfile_suffix = '.py'
+        event.current_buffer.open_in_editor(event.cli)
+
+    # ctrl+rで過去の実行コマンドをpeco
+    @bindings.add('c-r')
+    def select_history(event):
+        sess_history = $(history).split('\n')
+        hist = get_history(sess_history)
+        selected = $(echo @(hist) | peco)
+        event.current_buffer.insert_text(selected.strip())
+
+    # ctrl+sでssh_config内のhost先をpeco
+    @bindings.add('c-s')
+    def select_ssh(event):
+        hosts = _get_host(True)
+        selected = $(echo @(hosts) | peco)
+        if selected:
+            event.current_buffer.insert_text('ssha ' + selected.strip().split(', ')[0])
+
+    # ctrl+fで今いるディレクトリのfileをpeco
+    @bindings.add('c-f')
+    def select_file(event):
+        r = lambda x: './'+x if os.path.isdir(x) else x
+        files = '\n'.join([r(x.split(' ')[-1]) for x in $(ls -l).split('\n')])
+        selected = $(echo @(files) | peco)
+        event.current_buffer.insert_text(selected.strip())
+
+    # ctrl+dで過去移動したディレクトリをpeco
+    @bindings.add('c-d')
+    def _z(event):
+        selected = $(echo @(z()) | peco)
+        cd_cmd = "cd " + selected.strip()
+        event.current_buffer.insert_text(cd_cmd)
+
+    # ctrl+tで翻訳コマンドを入力
+    @bindings.add('c-t')
+    def _engs(event):
+        event.current_buffer.insert_text('t ')
+$EDITOR = '/usr/local/bin/vim'
+$VISUAL = '/usr/local/bin/vim'
+$PATH.append("/usr/local/bin/")
+$PATH.append("~/.nodenv/shims")
+$VI_MODE = False
 $COMPLETIONS_CONFIRM = True
-# é£ç¶éè¤ã³ãã³ããä¿å­ããªã
-$HISTCONTROL = (ignoredups)
-# æ¬å¼§ãè£å®
-$XONSH_AUTOPAIR = True
-# ãã£ã¬ã¯ããªåãå¥åããã°cdã§ãã
+$IGNOREEOF = True
+$INDENT = "    "
+$CASE_SENSITIVE_COMPLETIONS = False
+$HISTCONTROL = "ignoredups"
+$XONSH_AUTOPAIR = False
 $AUTO_CD = True
-# ã¨ã©ã¼å¨ã¦åãããã«
 $XONSH_SHOW_TRACEBACK = True
-# ãã­ã³ããã®è¨­å®ã¿ã¤ã ã¢ã¦ãã®ã¡ãã»ã¼ã¸æå¶
+$XONSH_COLOR_STYLE = 'default'
 $SUPPRESS_BRANCH_TIMEOUT_MESSAGE = True
+$FOREIGN_ALIASES_OVERRIDE = True
+$XONSH_COLOR_STYLE = 'native'
+$BOTTOM_TOOLBAR
+$COLOR_INPUT = True
+COLOR_RESULTS = True
 
-# è¦ãç®ã¦ã¶ãã£ããåãå¤æ´ãã
-# åè:http://xon.sh/tutorial.html#customizing-the-prompt
-# ãã­ã³ããä¸ã«ã¯å ´æã ãåºã
-$PROMPT = "{INTENSE_YELLOW}[ {cwd} ] {GREEN}$ "
-# ä¸é¨ã«user, hostæå ±ãè¿½å 
-$BOTTOM_TOOLBAR = "{BACKGROUND_WHITE}{BLACK}{user}@{hostname}"
-$RIGHT_PROMPT = "{curr_branch}"
-$LS_COLORS="di=34:ln=35:so=32:pi=33:ex=31:bd=46;34:cd=43;34:su=41;30:sg=46;30:tw=42;30:ow=43;30"
-
-ï¼ããããã
-aliases["lt"] = "ls -ltr"
-aliases["l"] = "ls -ltr"
-aliases["la"] = "ls -la"
-aliases["ll"] = "ls -l"
-aliases["so"] = "source"
+aliases['ee'] = "exit"
 aliases["v"] = "vim"
 aliases["vi"] = "vim"
 aliases["vx"] = "vim ~/.xonshrc"
 aliases["vv"] = "vim ~/.vimrc"
-aliases["vs"] = "vim /etx/ssh/ssh_config"
-aliases["cp"] = "cp -i"
-aliases["rm"] = "rm -i"
-aliases["ju"] = "jupyter notebook"
+aliases["vs"] = "vim ~/.ssh/config"
+aliases["rebootsh"] = "exec $SHELL -l"
+UPDATE_COMPLETIONS_ON_KEYPRESS = True
+def get_git_user():
+    return '{BLUE}' + $(git config user.name).strip() + ' {INTENSE_GREEN}{hostname}{WHITE} ( {YELLOW}"{cwd}" {WHITE}) {INTENSE_RED} {RED}{curr_branch}$ '
+$PROMPT = get_git_user
+$LS_COLORS="di=34:ln=35:so=32:pi=33:ex=31:bd=46;34:cd=43;34:su=41;30:sg=46;30:tw=42;30:ow=43;30"
+$XONSH_HISTORY_SIZE = (3000, 'commands')
+XONSH_HISTORY_MATCH_ANYWHERE = True
+$PTK_STYLE_OVERRIDES={
+ "completion-menu": "bg:ansiblack ansiwhite",
+ "completion-menu.completion": "bg:ansiblack",
+ "completion-menu.completion.current": "bg:ansiwhite ansiblack",
+ "scrollbar.background": "bg:ansibrightblack",
+ "scrollbar.arrow": "bg:ansiblack ansiwhite bold" ,
+ "scrollbar.button": "bg:ansiblack",
+ "auto-suggestion": "ansibrightblack",
+ "aborting": "ansibrightblack",
+ }

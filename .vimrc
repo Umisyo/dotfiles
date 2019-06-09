@@ -1,3 +1,11 @@
+filetype off
+set rtp+=~/.vim/bundle/Vundle.vim
+call vundle#begin()
+
+Plugin 'VundleVim/Vundle.vim'
+
+call vundle#end()
+filetype plugin indent on
 
 set number "行番号を表示する
 set title "編集中のファイル名を表示
@@ -24,6 +32,8 @@ set noerrorbells
 set shellslash
 set history=10000
 set noswapfile
+set cursorline
+set cursorcolumn
 
 colorscheme molokai
 
