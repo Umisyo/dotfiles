@@ -1,3 +1,3 @@
 #!/bin/sh
-ln -sf ~/dotfiles/.vimrc ~/.vimrc
-ln -sf ~/dotfiles/.xonshrc ~/.xonshrc
+ln -sf ~/project/other/dotfiles/.vimrc ~/.vimrc
+ln -sf ~/project/other/dotfiles/.xonshrc ~/.xonshrc

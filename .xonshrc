@@ -12,6 +12,7 @@ import xontrib.mplhooks
 import numpy as np
 import cv2
 import random
+import sys
 from mimetypes import guess_extension
 
 def z():
@@ -30,6 +31,10 @@ def _import(name, module, ver=None):
         except:
             print("can't import: {}".format(module))
 _import('pexpect','pexpect')
+
+def screen_saver():
+    while True:
+        sys.stdout.write(str(random.choice(range(99999))) + ' ')
 
 def _update_context(name, ctx=None):
     if ctx is None:
@@ -92,8 +97,6 @@ def get_history(session_history=None, return_list=False):
     else:
         return '\n'.join(cmds)
 
-
-
 @events.on_ptk_create
 def custom_keybindings(bindings, **kw):
 
@@ -142,6 +145,8 @@ $EDITOR = '/usr/local/bin/vim'
 $VISUAL = '/usr/local/bin/vim'
 $PATH.append("/usr/local/bin/")
 $PATH.append("~/.nodenv/shims")
+$PATH.append("~/.pyenv/bin")
+$PATH.append("~/flutter/bin")
 $VI_MODE = False
 $COMPLETIONS_CONFIRM = True
 $IGNOREEOF = True
@@ -158,17 +163,26 @@ $XONSH_COLOR_STYLE = 'native'
 $BOTTOM_TOOLBAR
 $COLOR_INPUT = True
 COLOR_RESULTS = True
+$TITLE = xonsh.environ.DEFAULT_TITLE
 
 aliases['ee'] = "exit"
-aliases["v"] = "vim"
 aliases["vi"] = "vim"
 aliases["vx"] = "vim ~/.xonshrc"
 aliases["vv"] = "vim ~/.vimrc"
 aliases["vs"] = "vim ~/.ssh/config"
-aliases["rebootsh"] = "exec $SHELL -l"
+aliases["fresh"] = "exec $SHELL -l"
+aliases['gib'] = "git branch"
+aliases['gic'] = 'git checkout'
+aliases["giadd"] = "git add"
+aliases["g"] = 'ghq root'
+aliases["nuxt"] = 'create-nuxt-app'
+aliases["pip"] = "pip3"
+aliases["python"] = "python3"
+aliases[":wq"] = "exit"
+
 UPDATE_COMPLETIONS_ON_KEYPRESS = True
 def get_git_user():
-    return '{BLUE}' + $(git config user.name).strip() + ' {INTENSE_GREEN}{hostname}{WHITE} ( {YELLOW}"{cwd}" {WHITE}) {INTENSE_RED} {RED}{curr_branch}$ '
+    return '{BLUE}' + $(git config user.name).strip()+ ' {INTENSE_GREEN}{hostname}{WHITE}' + ' \n' + '({YELLOW}"{cwd}" {WHITE}){INTENSE_RED}'  + '{BLUE}[{curr_branch}]{WHITE}$ '
 $PROMPT = get_git_user
 $LS_COLORS="di=34:ln=35:so=32:pi=33:ex=31:bd=46;34:cd=43;34:su=41;30:sg=46;30:tw=42;30:ow=43;30"
 $XONSH_HISTORY_SIZE = (3000, 'commands')
