@@ -7,13 +7,13 @@ import xonsh.xontribs
 from collections import OrderedDict
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.filters import (Condition, IsMultiline, HasSelection, ViInsertMode)
-import matplotlib.pyplot as plt
 import xontrib.mplhooks
-import numpy as np
-import cv2
 import random
 import sys
-from mimetypes import guess_extension
+
+def write_history():
+    with open("~/history.txt") as f:
+        f.write($(history show all))
 
 def z():
     lines = open($DIR_HIST_PATH[0]).read().rstrip("\n").split("\n")
@@ -53,24 +53,6 @@ def _update_context(name, ctx=None):
         return ctx.update(remodctx)
     return ctx.update(modctx)
 xonsh.xontribs.update_context = _update_context
-
-def _imgls(path):
-    fig, ax = plt.subplots(3, 3, sharex='col', sharey='row')
-    fig.set_size_inches(10, 10)
-    d=[]
-    for x in os.listdir(path):
-        if x.split('.')[-1] in ('jpe', 'jpeg', 'png'):
-            d.append(path+x)
-    if len(d)>9:
-        d = random.sample(d,9)
-    for i, imgid in enumerate(d):
-        col = i % 3
-        row = i // 3
-        img = cv2.imread(imgid)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        ax[row, col].imshow(img)
-    xontrib.mplhooks.display_figure_with_iterm2(fig)
-aliases['imgls'] = _imgls
 
 def get_history(session_history=None, return_list=False):
     hist_dir = __xonsh__.env['XONSH_DATA_DIR']
@@ -147,6 +129,7 @@ $PATH.append("/usr/local/bin/")
 $PATH.append("~/.nodenv/shims")
 $PATH.append("~/.pyenv/bin")
 $PATH.append("~/flutter/bin")
+$PATH.append("~/.composer/vendor/bin")
 $VI_MODE = False
 $COMPLETIONS_CONFIRM = True
 $IGNOREEOF = True
@@ -179,10 +162,11 @@ aliases["nuxt"] = 'create-nuxt-app'
 aliases["pip"] = "pip3"
 aliases["python"] = "python3"
 aliases[":wq"] = "exit"
+aliases["v"] = "vim"
 
 UPDATE_COMPLETIONS_ON_KEYPRESS = True
 def get_git_user():
-    return '{BLUE}' + $(git config user.name).strip()+ ' {INTENSE_GREEN}{hostname}{WHITE}' + ' \n' + '({YELLOW}"{cwd}" {WHITE}){INTENSE_RED}'  + '{BLUE}[{curr_branch}]{WHITE}$ '
+    return '{BLUE}' + $(git config user.name).strip()+ ' {INTENSE_GREEN}{hostname}{WHITE}' + ' \n' + '({YELLOW}"{cwd}" {WHITE}){INTENSE_RED}'  + '{BLUE}[{curr_branch}]{WHITE} >>> '
 $PROMPT = get_git_user
 $LS_COLORS="di=34:ln=35:so=32:pi=33:ex=31:bd=46;34:cd=43;34:su=41;30:sg=46;30:tw=42;30:ow=43;30"
 $XONSH_HISTORY_SIZE = (3000, 'commands')

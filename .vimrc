@@ -1,10 +1,21 @@
 filetype off
 set rtp+=~/.vim/bundle/Vundle.vim
+set shell=/bin/bash
+
 call vundle#begin()
 
 Plugin 'VundleVim/Vundle.vim'
+Plugin 'scrooloose/nerdtree'
+Plugin 'posva/vim-vue'
+Plugin 'tpope/vim-fugitive'
+Plugin 'vim-airline/vim-airline'
+Plugin 'jiangmiao/auto-pairs'
+Plugin 'zxqfl/tabnine-vim'
+Plugin 'gabrielelana/vim-markdown'
+Plugin 'suan/vim-instant-markdown', {'rtp': 'after'}
 
 call vundle#end()
+
 filetype plugin indent on
 
 set number "行番号を表示する
