@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 import json
 import importlib
@@ -8,62 +9,42 @@ from collections import OrderedDict
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.filters import (Condition, IsMultiline, HasSelection, ViInsertMode)
 import xontrib.mplhooks
-import random
 import sys
 
-def write_history():
-    with open("~/history.txt") as f:
-        f.write($(history show all))
+# vi風の操作がシェル上で直感的でないのでFalse
+$VI_MODE = False
+# 補完をEnterで直接実行しない
+$COMPLETIONS_CONFIRM = True
+# Ctrl + D で終了しない
+$IGNOREEOF = True
+# tabではなく空白4つ
+$INDENT = "    "
+# 補完時に大小区別しない
+$CASE_SENSITIVE_COMPLETIONS = False
+# 連続重複コマンドを保存しない
+$HISTCONTROL = "ignoredups"
+# 括弧を補完
+$XONSH_AUTOPAIR = True
+# ディレクトリ名を入力でcd
+$AUTO_CD = True
+# エラー全て吐くように
+$XONSH_SHOW_TRACEBACK = True
+# サブプロセスタイムアウトのメッセージ抑制
+$SUPPRESS_BRANCH_TIMEOUT_MESSAGE = True
+# キー入力即評価（サイコー）
+$UPDATE_COMPLETIONS_ON_KEYPRESS = True
 
-def z():
-    lines = open($DIR_HIST_PATH[0]).read().rstrip("\n").split("\n")
-    return("\n".join([p for p, c in Counter(lines).most_common()]))
-
-def _import(name, module, ver=None):
-    try:
-        globals()[name] = importlib.import_module(module)
-    except ImportError:
-        try:
-            import subprocess
-            cmd = "sudo pip3 install -I {}".format(name)
-            subprocess.call(cmd, shell=True)
-            globals()[name] = importlib.import_module(module)
-        except:
-            print("can't import: {}".format(module))
-_import('pexpect','pexpect')
-
-def screen_saver():
-    while True:
-        sys.stdout.write(str(random.choice(range(99999))) + ' ')
-
-def _update_context(name, ctx=None):
-    if ctx is None:
-        ctx = builtins.__xonsh__.ctx
-    if not hasattr(update_context, "bad_imports"):
-        _update_context.bad_imports = []
-    modctx = xontrib_context(name)
-    if modctx is None:
-        import subprocess
-        cmd = "sudo xonsh -c 'xpip3 install -I xontrib-{}'".format(name)
-        subprocess.call(cmd, shell=True)
-        remodctx = xontrib_context(name)
-        if remodctx is None:
-            _update_context.bad_imports.append(name)
-            return ctx
-        return ctx.update(remodctx)
-    return ctx.update(modctx)
-xonsh.xontribs.update_context = _update_context
-
+# 履歴をpecoに流す
+# https://qiita.com/riktor/items/4a90b4e125cd091a9d07
+# pecoのinstall : https://qiita.com/ngyuki/items/94a7e638655d9910971b
+import json
+from collections import OrderedDict
+from operator import itemgetter
 def get_history(session_history=None, return_list=False):
     hist_dir = __xonsh__.env['XONSH_DATA_DIR']
     files = [ os.path.join(hist_dir,f) for f in os.listdir(hist_dir)
               if f.startswith('xonsh-') and f.endswith('.json') ]
-    file_hist = []
-    for f in files:
-        try:
-            file_hist.append(json.load(open(f))['data']['cmds'])
-        except:
-            pass
+    file_hist = [ json.load(open(f))['data']['cmds'] for f in files ]
     cmds = [ ( c['inp'].replace('\n', ''), c['ts'][0] )
                  for cmds in file_hist for c in cmds if c]
     cmds.sort(key=itemgetter(1))
@@ -73,22 +54,31 @@ def get_history(session_history=None, return_list=False):
     # dedupe
     zip_with_dummy = list(zip(cmds, [0] * len(cmds)))[::-1]
     cmds = list(OrderedDict(zip_with_dummy).keys())[::-1]
-    cmds = reversed(cmds)
     if return_list:
         return cmds
     else:
         return '\n'.join(cmds)
 
+# sshをpecoに流す
+def get_ssh():
+    items = re.sub(r'(?i)host ', '', $(cat ~/.ssh/config /etc/ssh/ssh_config | grep -i '^host'))
+    return items
+
+def _get_ghq_root():
+    @(($(ghq root) + '/' + $(ghq list | peco)).replace('\n', ''))
+# キーバインド
+from prompt_toolkit.keys import Keys
+from prompt_toolkit.filters import (Condition, IsMultiline, HasSelection, EmacsInsertMode, ViInsertMode)
 @events.on_ptk_create
 def custom_keybindings(bindings, **kw):
-
-    # ctrl+vで入力中の単一、複数行コマンドをvimで開く
+    # ptk 2.xでは @bindings.add('c-v') とする
+    # コマンド入力中にctrl+vでvim編集
     @bindings.add('c-v')
     def edit_in_editor(event):
         event.current_buffer.tempfile_suffix = '.py'
         event.current_buffer.open_in_editor(event.cli)
 
-    # ctrl+rで過去の実行コマンドをpeco
+    # ctrl+rで履歴をpecoに流して検索
     @bindings.add('c-r')
     def select_history(event):
         sess_history = $(history).split('\n')
@@ -96,40 +86,72 @@ def custom_keybindings(bindings, **kw):
         selected = $(echo @(hist) | peco)
         event.current_buffer.insert_text(selected.strip())
 
-    # ctrl+sでssh_config内のhost先をpeco
+    #ctrl+sでssh先をpeco
     @bindings.add('c-s')
     def select_ssh(event):
-        hosts = _get_host(True)
+        hosts = '\n'.join([x for x in get_ssh().split('\n') if x!='*' and 'HostKey' not in x])
         selected = $(echo @(hosts) | peco)
         if selected:
-            event.current_buffer.insert_text('ssha ' + selected.strip().split(', ')[0])
+            event.current_buffer.insert_text('ssh ' + selected.strip())
 
-    # ctrl+fで今いるディレクトリのfileをpeco
-    @bindings.add('c-f')
-    def select_file(event):
-        r = lambda x: './'+x if os.path.isdir(x) else x
-        files = '\n'.join([r(x.split(' ')[-1]) for x in $(ls -l).split('\n')])
-        selected = $(echo @(files) | peco)
-        event.current_buffer.insert_text(selected.strip())
+    @bindings.add('c-g')
+        def select_repogitory(event):
+            _get_ghq_root()
 
-    # ctrl+dで過去移動したディレクトリをpeco
-    @bindings.add('c-d')
-    def _z(event):
-        selected = $(echo @(z()) | peco)
-        cd_cmd = "cd " + selected.strip()
-        event.current_buffer.insert_text(cd_cmd)
 
-    # ctrl+tで翻訳コマンドを入力
-    @bindings.add('c-t')
-    def _engs(event):
-        event.current_buffer.insert_text('t ')
-$EDITOR = '/usr/local/bin/vim'
-$VISUAL = '/usr/local/bin/vim'
+# 直近のxonshjobころすマン
+# https://github.com/zardus/xonshrc/blob/master/xonshrc
+def _kill_last(args, stdin=None):
+	if __xonsh_active_job__ is None:
+		print("No active job. Aborting.")
+		return
+	cmd = 'kill %s %d' % (''.join(args), __xonsh_all_jobs__[__xonsh_active_job__]['pgrp'])
+	os.system(cmd)
+aliases['kill_last'] = _kill_last
+
+# diskutil infoを見る
+# https://github.com/asmeurer/dotfiles/blob/master/.xonshrc
+def _free(args, stdin=None):
+    disk_info = $(diskutil info /)
+    return [i for i in disk_info.splitlines() if "Free" in i][0] + '\n'
+aliases['fr'] = _free
+
+# gc
+import gc
+def _gc(args, stdin=None):
+    gc.collect()
+aliases['gc'] = _gc
+
+# ライブラリの実行時import
+# https://vaaaaaanquish.hatenablog.com/entry/2017/12/26/190153
+# xonsh上で使うときがありそうなライブラリはlazyasdで補完時、実行時に読み込み
+from xonsh.lazyasd import lazyobject
+import importlib
+lazy_module_dict = {
+    'sys': 'sys',
+    'random': 'random',
+    'shutil': 'shutil',
+    'pd': 'pandas',
+    'np': 'numpy',
+    'requests': 'requests',
+    'os': 'os',
+    'plt': 'matplotlib.pyplot',
+    'Path': 'pathlib.Path',
+        }
+for k,v in lazy_module_dict.items():
+    t = "@lazyobject\ndef {}():\n    return importlib.import_module('{}')".format(k, v)
+    exec(t)
+
+$EDITOR = '/usr/bin/vim'
+$PATH.append('/usr/bin/vim')
 $PATH.append("/usr/local/bin/")
 $PATH.append("~/.nodenv/shims")
 $PATH.append("~/.pyenv/bin")
 $PATH.append("~/flutter/bin")
 $PATH.append("~/.composer/vendor/bin")
+$PATH.append("~/.cargo/env")
+$PATH.append("~/.cargo/bin")
+$PATH.append("/usr/local/bin/git")
 $VI_MODE = False
 $COMPLETIONS_CONFIRM = True
 $IGNOREEOF = True
@@ -149,6 +171,7 @@ COLOR_RESULTS = True
 $TITLE = xonsh.environ.DEFAULT_TITLE
 
 aliases['ee'] = "exit"
+aliases['vim'] = '/usr/bin/vim'
 aliases["vi"] = "vim"
 aliases["vx"] = "vim ~/.xonshrc"
 aliases["vv"] = "vim ~/.vimrc"
@@ -156,19 +179,21 @@ aliases["vs"] = "vim ~/.ssh/config"
 aliases["fresh"] = "exec $SHELL -l"
 aliases['gib'] = "git branch"
 aliases['gic'] = 'git checkout'
-aliases["giadd"] = "git add"
-aliases["g"] = 'ghq root'
-aliases["nuxt"] = 'create-nuxt-app'
+aliases["gia"] = "git add"
+aliases["gip"] = "git pull"
+aliases["g"] = _get_ghq_root
 aliases["pip"] = "pip3"
 aliases["python"] = "python3"
 aliases[":wq"] = "exit"
 aliases["v"] = "vim"
+aliases["ls"] = "exa -lha"
+aliases["tree"] = "exa -T"
+aliases["cl"] = "clear"
 
 UPDATE_COMPLETIONS_ON_KEYPRESS = True
 def get_git_user():
-    return '{BLUE}' + $(git config user.name).strip()+ ' {INTENSE_GREEN}{hostname}{WHITE}' + ' \n' + '({YELLOW}"{cwd}" {WHITE}){INTENSE_RED}'  + '{BLUE}[{curr_branch}]{WHITE} >>> '
+    return '{BLUE}' + $(/usr/local/Cellar/git/2.24.0/bin/git config user.name).strip()+ ' {INTENSE_GREEN}{hostname}{WHITE}' + ' \n' + '[ {YELLOW}{cwd}{WHITE} ]{INTENSE_RED}'  + '{BLUE}[{curr_branch}]{WHITE} >>> '
 $PROMPT = get_git_user
-$LS_COLORS="di=34:ln=35:so=32:pi=33:ex=31:bd=46;34:cd=43;34:su=41;30:sg=46;30:tw=42;30:ow=43;30"
 $XONSH_HISTORY_SIZE = (3000, 'commands')
 XONSH_HISTORY_MATCH_ANYWHERE = True
 $PTK_STYLE_OVERRIDES={
