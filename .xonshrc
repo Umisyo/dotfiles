@@ -95,9 +95,8 @@ def custom_keybindings(bindings, **kw):
             event.current_buffer.insert_text('ssh ' + selected.strip())
 
     @bindings.add('c-g')
-        def select_repogitory(event):
+    def select_repogitory(event):
             _get_ghq_root()
-
 
 # 直近のxonshjobころすマン
 # https://github.com/zardus/xonshrc/blob/master/xonshrc
