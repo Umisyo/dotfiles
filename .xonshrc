@@ -8,8 +8,18 @@ import xonsh.xontribs
 from collections import OrderedDict
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.filters import (Condition, IsMultiline, HasSelection, ViInsertMode)
-import xontrib.mplhooks
 import sys
+
+$EDITOR = '/usr/bin/vim'
+$PATH.append('/usr/bin/vim')
+$PATH.append("/usr/local/bin/")
+$PATH.append("~/.nodenv/shims")
+$PATH.append("~/.pyenv/bin")
+$PATH.append("~/flutter/bin")
+$PATH.append("~/.composer/vendor/bin")
+$PATH.append("~/.cargo/env")
+$PATH.append("~/.cargo/bin")
+$PATH.append("/usr/local/bin/git")
 
 # vi風の操作がシェル上で直感的でないのでFalse
 $VI_MODE = False
@@ -141,16 +151,6 @@ for k,v in lazy_module_dict.items():
     t = "@lazyobject\ndef {}():\n    return importlib.import_module('{}')".format(k, v)
     exec(t)
 
-$EDITOR = '/usr/bin/vim'
-$PATH.append('/usr/bin/vim')
-$PATH.append("/usr/local/bin/")
-$PATH.append("~/.nodenv/shims")
-$PATH.append("~/.pyenv/bin")
-$PATH.append("~/flutter/bin")
-$PATH.append("~/.composer/vendor/bin")
-$PATH.append("~/.cargo/env")
-$PATH.append("~/.cargo/bin")
-$PATH.append("/usr/local/bin/git")
 $VI_MODE = False
 $COMPLETIONS_CONFIRM = True
 $IGNOREEOF = True
@@ -191,11 +191,11 @@ aliases["cl"] = "clear"
 
 UPDATE_COMPLETIONS_ON_KEYPRESS = True
 def get_git_user():
-    return '{BLUE}' + $(/usr/local/Cellar/git/2.24.0/bin/git config user.name).strip()+ ' {INTENSE_GREEN}{hostname}{WHITE}' + ' \n' + '[ {YELLOW}{cwd}{WHITE} ]{INTENSE_RED}'  + '{BLUE}[{curr_branch}]{WHITE} >>> '
+    return '{BLUE}' + $(git config user.name).strip()+ ' {INTENSE_GREEN}{hostname}{WHITE}' + ' \n' + '[ {YELLOW}{cwd}{WHITE} ]{INTENSE_RED}'  + '{BLUE}[{curr_branch}]{WHITE} >>> '
 $PROMPT = get_git_user
 $XONSH_HISTORY_SIZE = (3000, 'commands')
 XONSH_HISTORY_MATCH_ANYWHERE = True
-$PTK_STYLE_OVERRIDES={
+$XONSH_STYLE_OVERRIDES={
  "completion-menu": "bg:ansiblack ansiwhite",
  "completion-menu.completion": "bg:ansiblack",
  "completion-menu.completion.current": "bg:ansiwhite ansiblack",
@@ -205,3 +205,5 @@ $PTK_STYLE_OVERRIDES={
  "auto-suggestion": "ansibrightblack",
  "aborting": "ansibrightblack",
  }
+
+execx($(starship init xonsh))

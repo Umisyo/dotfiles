@@ -1,3 +1,3 @@
 #!/bin/sh
-ln -sf ~/project/dotfiles/.vimrc ~/.vimrc
-ln -sf ~/project/dotfiles/.xonshrc ~/.xonshrc
+ln -sf ~/project/ghr/github.com/Umisyo/dotfiles/.vimrc ~/.vimrc
+ln -sf ~/project/ghr/github.com/Umisyo/dotfiles/.zshrc ~/.zshrc
